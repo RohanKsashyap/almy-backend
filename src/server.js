@@ -34,8 +34,8 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 const allowedOrigins = [
   process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
-  'https://www.almys.com.au',
-  'https://almys-ui.vercel.app',
+  'https://www.almystore.com',
+  'https://almy-ui.vercel.app',
 ].filter(Boolean);
 
 app.use(cors({
