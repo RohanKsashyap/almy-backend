@@ -218,7 +218,7 @@ router.post('/create-payment-session/:id', async (req, res) => {
     // Create line items for Stripe
     const lineItems = order.products.map(item => ({
       price_data: {
-        currency: 'aud',
+        currency: 'inr',
         product_data: {
           name: item.title,
           description: item.variantName ? `Variant: ${item.variantName}` : undefined,
@@ -231,7 +231,7 @@ router.post('/create-payment-session/:id', async (req, res) => {
     if (order.shippingFee > 0) {
       lineItems.push({
         price_data: {
-          currency: 'aud',
+          currency: 'inr',
           product_data: { name: 'Shipping Fee' },
           unit_amount: Math.round(order.shippingFee * 100),
         },
@@ -242,7 +242,7 @@ router.post('/create-payment-session/:id', async (req, res) => {
     if (order.tax > 0) {
       lineItems.push({
         price_data: {
-          currency: 'aud',
+          currency: 'inr',
           product_data: { name: 'Tax (GST)' },
           unit_amount: Math.round(order.tax * 100),
         },
@@ -365,7 +365,7 @@ router.post('/stripe-session', async (req, res) => {
     // Create line items for Stripe
     const lineItems = cart.map(item => ({
       price_data: {
-        currency: 'aud',
+        currency: 'inr',
         product_data: {
           name: item.title,
           description: item.variantName ? `Size: ${item.variantName}` : undefined,
@@ -379,7 +379,7 @@ router.post('/stripe-session', async (req, res) => {
     if (shippingFee > 0) {
       lineItems.push({
         price_data: {
-          currency: 'aud',
+          currency: 'inr',
           product_data: {
             name: 'Shipping Fee',
           },
@@ -393,7 +393,7 @@ router.post('/stripe-session', async (req, res) => {
     if (tax > 0) {
       lineItems.push({
         price_data: {
-          currency: 'aud',
+          currency: 'inr',
           product_data: {
             name: 'Tax (GST)',
           },
@@ -582,3 +582,4 @@ router.post('/webhook', async (req, res) => {
 });
 
 module.exports = router;
+
