@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   category: { type: String, default: 'Uncategorized' }, // legacy string
   categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null },
+  subCategorySlug: { type: String, default: '', trim: true }, // subcategory slug for filtering
   brand: { type: String, default: '' },
   image: { type: String, default: '' },
   imageId: { type: String, default: '' },  // ImageKit file ID for deletion

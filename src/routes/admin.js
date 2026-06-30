@@ -116,6 +116,7 @@ router.post('/products', async (req, res) => {
     const originalPrice = req.body.originalPrice;
     const description = sanitizeString(req.body.description);
     const categoryId = sanitizeString(req.body.categoryId);
+    const subCategorySlug = sanitizeString(req.body.subCategorySlug);
     const inStock = req.body.inStock;
     const size = sanitizeString(req.body.size);
     const sizes = req.body.sizes || [];
@@ -366,6 +367,7 @@ router.post('/products', async (req, res) => {
       brand,
       category: req.body.category || undefined, // legacy support if client still sends name
       categoryId: categoryId || null,
+      subCategorySlug: subCategorySlug || '',
       image: imageUrl,
       imageId,
       thumbnailUrl,
@@ -504,6 +506,7 @@ router.put('/products/:id', async (req, res) => {
     const originalPrice = req.body.originalPrice;
     const description = sanitizeString(req.body.description);
     const categoryId = sanitizeString(req.body.categoryId);
+    const subCategorySlug = sanitizeString(req.body.subCategorySlug);
     const brand = sanitizeString(req.body.brand);
     const inStock = req.body.inStock;
     const size = sanitizeString(req.body.size);
@@ -524,6 +527,7 @@ router.put('/products/:id', async (req, res) => {
       description,
       brand,
       categoryId: categoryId || null,
+      subCategorySlug: subCategorySlug || '',
       inStock: Number(inStock) || 0,
       size: size || '',
       sizes: Array.isArray(sizes) ? sizes : (sizes ? [sizes] : []),
@@ -1017,7 +1021,7 @@ router.get('/categories', async (req, res) => {
 
 router.post('/categories', async (req, res) => {
   try {
-    const { name, description, slug, isActive, displayOrder } = req.body;
+    const { name, description, slug, isActive, showInNav, displayOrder, link } = req.body;
     
     let imageUrl = '';
     let imageId = '';
@@ -1040,10 +1044,13 @@ router.post('/categories', async (req, res) => {
       description,
       slug: slug || name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
       isActive: isActive !== undefined ? isActive : true,
+      showInNav: showInNav !== undefined ? showInNav : true,
+      link: link || '',
       displayOrder: Number(displayOrder) || 0,
       imageUrl,
       imageId,
-      thumbnailUrl
+      thumbnailUrl,
+      subCategories: []
     });
 
     res.json(category);
@@ -1055,7 +1062,7 @@ router.post('/categories', async (req, res) => {
 
 router.put('/categories/:id', async (req, res) => {
   try {
-    const { name, description, slug, isActive, displayOrder } = req.body;
+    const { name, description, slug, isActive, showInNav, displayOrder, link } = req.body;
     const category = await Category.findById(req.params.id);
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
@@ -1088,6 +1095,8 @@ router.put('/categories/:id', async (req, res) => {
     category.description = description !== undefined ? description : category.description;
     category.slug = slug || category.slug;
     category.isActive = isActive !== undefined ? isActive : category.isActive;
+    category.showInNav = showInNav !== undefined ? showInNav : category.showInNav;
+    category.link = link !== undefined ? link : category.link;
     category.displayOrder = displayOrder !== undefined ? Number(displayOrder) : category.displayOrder;
     category.imageUrl = imageUrl;
     category.imageId = imageId;
@@ -1121,6 +1130,69 @@ router.delete('/categories/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting category:', err);
     res.status(500).json({ message: 'Error deleting category' });
+  }
+});
+
+// Subcategory CRUD (admin)
+router.post('/categories/:id/subcategories', async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+
+    const { name, slug, link, displayOrder, isActive } = req.body;
+    category.subCategories.push({
+      name,
+      slug: slug || name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+      link: link || '',
+      displayOrder: Number(displayOrder) || 0,
+      isActive: isActive !== undefined ? isActive : true
+    });
+
+    await category.save();
+    res.json(category);
+  } catch (err) {
+    console.error('Error adding subcategory:', err);
+    res.status(500).json({ message: 'Error adding subcategory', error: err.message });
+  }
+});
+
+router.put('/categories/:id/subcategories/:subId', async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+
+    const sub = category.subCategories.id(req.params.subId);
+    if (!sub) return res.status(404).json({ message: 'Subcategory not found' });
+
+    const { name, slug, link, displayOrder, isActive } = req.body;
+    if (name !== undefined) sub.name = name;
+    if (slug !== undefined) sub.slug = slug;
+    if (link !== undefined) sub.link = link;
+    if (displayOrder !== undefined) sub.displayOrder = Number(displayOrder);
+    if (isActive !== undefined) sub.isActive = isActive;
+
+    await category.save();
+    res.json(category);
+  } catch (err) {
+    console.error('Error updating subcategory:', err);
+    res.status(500).json({ message: 'Error updating subcategory', error: err.message });
+  }
+});
+
+router.delete('/categories/:id/subcategories/:subId', async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+
+    category.subCategories = category.subCategories.filter(
+      (sub) => sub._id.toString() !== req.params.subId
+    );
+
+    await category.save();
+    res.json(category);
+  } catch (err) {
+    console.error('Error deleting subcategory:', err);
+    res.status(500).json({ message: 'Error deleting subcategory', error: err.message });
   }
 });
 

@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 
+const subCategorySchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true },
+  slug: { type: String, required: true, trim: true, lowercase: true },
+  link: { type: String, trim: true },
+  displayOrder: { type: Number, default: 0 },
+  isActive: { type: Boolean, default: true }
+}, { _id: true });
+
 const categorySchema = new mongoose.Schema({
   name: {
     type: String,
@@ -22,6 +30,10 @@ const categorySchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  showInNav: {
+    type: Boolean,
+    default: true
+  },
   displayOrder: {
     type: Number,
     default: 0
@@ -37,6 +49,10 @@ const categorySchema = new mongoose.Schema({
   thumbnailUrl: {
     type: String,
     trim: true
+  },
+  subCategories: {
+    type: [subCategorySchema],
+    default: []
   },
   createdAt: {
     type: Date,

@@ -8,21 +8,35 @@ const router = Router();
 // Get all products
 router.get('/', async (req, res) => {
   try {
-    const { category, age, categoryId } = req.query;
+    const { category, age, categoryId, sub } = req.query;
     const filter = {};
-    
+
+    // Filter by category slug — resolve to ObjectId via Category model
     if (category) {
-      filter.category = category;
+      const Category = require('../models/Category');
+      const cat = await Category.findOne({ slug: category, isActive: true });
+      if (cat) {
+        filter.categoryId = cat._id;
+      } else {
+        // Fallback: treat as legacy string category name
+        filter.category = category;
+      }
     }
 
+    // Filter by categoryId directly (ObjectId)
     if (categoryId) {
       filter.categoryId = categoryId;
     }
-    
+
+    // Filter by subcategory slug
+    if (sub) {
+      filter.subCategorySlug = sub;
+    }
+
     if (age) {
       filter.ageGroups = age;
     }
-    
+
     const products = await Product.find(filter).populate('categoryId', 'name slug');
     res.json({ products });
   } catch (err) {
